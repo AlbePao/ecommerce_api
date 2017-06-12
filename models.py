@@ -1,10 +1,27 @@
-from peewee import Model, SqliteDatabase, Check
+from peewee import Model, SqliteDatabase, PostgresqlDatabase, Check
 from peewee import DecimalField, TextField, CharField
 from peewee import UUIDField, ForeignKeyField, IntegerField, BooleanField
 from schemas import ItemSchema, UserSchema, AddressSchema
 from passlib.hash import pbkdf2_sha256
+from urllib.parse import urlparse
+import os
 
-database = SqliteDatabase('database.db')
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
+
+database = ''
+
+if ENVIRONMENT == 'dev':
+    database = SqliteDatabase('database.db')
+else:
+    urlparse.uses_netloc.append('postgres')
+    url_db = urlparse(os.getenv('DATABASE_URL'))
+
+    database = PostgresqlDatabase(
+        url_db.path[1:],
+        user=url_db.username,
+        password=url_db.password,
+        host=url_db.hostname,
+    )
 
 
 class BaseModel(Model):
